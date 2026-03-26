@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charlotte Lei | 昊玥的叙事长轴</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sage-green: #6b7c67;
+            --coral-pink: #e98b8b;
+            --triforce-gold: #d4af37;
+            --bg-creme: #fafaf8;
+        }
+
+        body {
+            background-color: var(--bg-creme);
+            color: #2c312c;
+            font-family: 'Noto Sans SC', sans-serif;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        .serif { font-family: 'Noto Serif SC', serif; }
+        .kaomoji { font-family: sans-serif; font-weight: bold; color: var(--sage-green); }
+
+        /* 滚动进度条 */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--sage-green), var(--coral-pink));
+            z-index: 1000;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        /* 章节通用样式 */
+        section {
+            padding: 80px 24px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .section-title {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 40%;
+            height: 3px;
+            background: var(--sage-green);
+        }
+
+        /* 三角之力特效 */
+        .triforce-glow {
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+            transition: all 0.5s ease;
+        }
+        .triforce-glow:hover {
+            filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.8));
+            transform: scale(1.05);
+        }
+
+        /* 卡片通用 */
+        .quest-card {
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.02);
+            border: 1px solid rgba(0,0,0,0.04);
+            height: 100%;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @media (min-width: 768px) {
+            .quest-card { padding: 48px; }
+        }
+        .quest-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+        }
+
+        .game-panel {
+            border-radius: 40px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 技能徽章 */
+        .skill-tag {
+            background: white;
+            border: 1px solid #eee;
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: default;
+        }
+        .skill-tag:hover {
+            background: var(--sage-green);
+            color: white;
+            border-color: var(--sage-green);
+            transform: translateY(-3px);
+        }
+
+        /* 插画区块修复 */
+        .illustration-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+            font-size: 5rem;
+        }
+
+        /* 呀哈哈交互 */
+        .korok-popup {
+            position: fixed;
+            z-index: 2000;
+            pointer-events: none;
+            animation: jump 1.2s forwards;
+        }
+        @keyframes jump {
+            0% { transform: scale(0) translateY(0); opacity: 0; }
+            40% { transform: scale(1.3) translateY(-60px); opacity: 1; }
+            100% { transform: scale(1) translateY(-40px); opacity: 0; }
+        }
+
+        #leaf-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 24px;
+            display: none; /* 默认隐藏，桌面端显示 */
+        }
+        @media (min-width: 1024px) {
+            #leaf-cursor { display: block; }
+        }
+
+        .glass-tag {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="selection:bg-pink-100">
+
+    <div id="progress-bar"></div>
+    <div id="leaf-cursor">🍃</div>
+
+    <!-- 导航 -->
+    <nav class="fixed top-0 w-full p-6 md:p-8 flex justify-between items-center z-50 mix-blend-difference text-white">
+        <div class="serif text-xl tracking-tighter">CHARLOTTE LEI</div>
+        <div class="hidden md:flex gap-6 lg:gap-8 text-[10px] tracking-[0.2em] lg:tracking-[0.3em] uppercase">
+            <a href="#origin" class="hover:text-pink-300 transition-colors">Origin</a>
+            <a href="#living" class="hover:text-pink-300 transition-colors">Life</a>
+            <a href="#wanderer" class="hover:text-pink-300 transition-colors">Travel</a>
+            <a href="#experience" class="hover:text-pink-300 transition-colors">Quest</a>
+            <a href="#skills" class="hover:text-pink-300 transition-colors">Talent</a>
+            <a href="#dual-soul" class="hover:text-pink-300 transition-colors">Gamer</a>
+        </div>
+    </nav>
+
+    <!-- 1. Origin: 黛玉与超级玛丽 -->
+    <section id="origin">
+        <div class="max-w-6xl mx-auto w-full px-4">
+            <div class="flex flex-col md:flex-row items-center gap-12 lg:gap-16 mb-20">
+                <div class="flex-1 text-center md:text-left">
+                    <div class="text-4xl lg:text-5xl mb-6">(˶ᵔ ᵕ ᵔ˶) ✨</div>
+                    <h1 class="text-5xl lg:text-7xl serif mb-8 leading-[1.2]">
+                        文字里的<span class="text-[#6b7c67] italic">林黛玉</span><br>
+                        生活里的<span class="text-[#e98b8b]">超级玛丽</span>
+                    </h1>
+                    <p class="text-lg lg:text-xl text-gray-500 font-light leading-relaxed max-w-2xl mx-auto md:mx-0">
+                        穿梭于感性文本与理性逻辑之间的叙事设计师。致力于挖掘交互机制背后的情感张力，用细腻的笔触构建能被感知的虚拟生命力。
+                    </p>
+                </div>
+                <div class="w-48 h-48 lg:w-72 lg:h-72 flex items-center justify-center triforce-glow shrink-0">
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <polygon points="50,15 25,55 75,55" fill="#d4af37" opacity="0.9" />
+                        <polygon points="25,55 0,95 50,95" fill="#d4af37" opacity="0.9" />
+                        <polygon points="75,55 50,95 100,95" fill="#d4af37" opacity="0.9" />
+                        <text x="50" y="52" font-size="6" fill="white" text-anchor="middle" class="serif" style="letter-spacing: 1px;">TRIFORCE</text>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div class="quest-card border-t-4 border-[#6b7c67]">
+                    <div class="text-4xl mb-6">💎</div>
+                    <h3 class="text-2xl font-bold mb-4 text-[#6b7c67]">敏感 / Sensitivity</h3>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest mb-4">叙事颗粒度设计</div>
+                    <p class="text-sm text-gray-500 leading-loose italic">
+                        “对细微情绪的超常捕捉力”。我习惯于在字里行间埋下情绪的伏笔，通过环境描写与潜台词的设计，精准引导玩家产生预期的情感共鸣。
+                    </p>
+                </div>
+                <div class="quest-card border-t-4 border-[#e98b8b]">
+                    <div class="text-4xl mb-6">🛡️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-[#e98b8b]">勇气 / Courage</h3>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest mb-4">媒介边界重构</div>
+                    <p class="text-sm text-gray-500 leading-loose italic">
+                        “打破次元壁的设计决断”。不满足于传统的线性叙事，勇于尝试将电影视听语言与交互机制融合，在非传统的叙事框架中寻找逻辑的平衡点。
+                    </p>
+                </div>
+                <div class="quest-card border-t-4 border-[#d4af37] sm:col-span-2 lg:col-span-1">
+                    <div class="text-4xl mb-6">☀️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-[#d4af37]">乐观 / Optimism</h3>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest mb-4">人文价值底色</div>
+                    <p class="text-sm text-gray-500 leading-loose italic">
+                        “灰暗世界观里的温柔留白”。即使在最压抑的剧情中，我也坚持保留人性光辉的窗口，用叙事给予玩家在虚拟世界中继续前行的精神动力。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Living: 反差 -->
+    <section id="living" class="bg-white">
+        <div class="max-w-6xl mx-auto w-full px-4">
+            <div class="flex flex-col lg:flex-row gap-16 lg:gap-20 items-center">
+                <div class="lg:w-1/2">
+                    <h2 class="serif section-title">烟火里的反差萌 / Contrast</h2>
+                    <p class="text-xl lg:text-2xl text-gray-600 mb-8 leading-relaxed font-light">
+                        “很多人说，我的文字和本人是两个完全相反的方向。” <span class="kaomoji">(⊙_⊙)</span>
+                    </p>
+                    <div class="space-y-6 text-gray-500">
+                        <p class="text-base leading-relaxed">
+                            生活中的我是个热烈的“行动派”。我热爱在厨房里进行“化学实验”——烘焙和烹饪对我来说是另一种形式的编剧：食材的配比是结构，火候的掌控是节奏，最后呈现的香气则是高潮。
+                        </p>
+                        <div class="bg-pink-50/50 p-6 lg:p-8 rounded-[32px] border-l-4 border-pink-200">
+                            <p class="text-base leading-relaxed italic text-gray-700">
+                                而笔下的我，则会沉入深海。我的文字更多展现的是极其“细腻的情感体验”。这种“动态的人”与“静态的文”之间的反差，恰恰赋予了我多维的叙事视角：既能雷厉风行地执行，也能温柔细腻地共情。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:w-1/2 grid grid-cols-2 gap-4 lg:gap-8 w-full">
+                    <div class="illustration-box bg-orange-50 hover:rotate-2 transition-transform cursor-pointer relative shadow-inner">
+                        <span class="text-6xl">🧁</span>
+                        <span class="absolute bottom-6 text-[10px] uppercase tracking-widest text-[#e98b8b] font-bold">Baking Logic</span>
+                    </div>
+                    <div class="illustration-box bg-green-50 mt-12 hover:-rotate-2 transition-transform cursor-pointer relative shadow-inner">
+                        <span class="text-6xl">💐</span>
+                        <span class="absolute bottom-6 text-[10px] uppercase tracking-widest text-[#6b7c67] font-bold">Floral Art</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Wanderer: 观察者 -->
+    <section id="wanderer" class="bg-[#f0f2ef]">
+        <div class="max-w-6xl mx-auto w-full px-4">
+            <div class="text-center mb-16">
+                <h2 class="serif section-title">流浪的观察者 / Wanderer</h2>
+                <div class="text-5xl mt-6 mb-8 flex justify-center gap-6"><span>🚞</span> <span>🌍</span> <span>🔭</span></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                <div class="space-y-8 order-2 lg:order-1">
+                    <div class="p-2">
+                        <h3 class="text-2xl lg:text-3xl font-bold mb-4 flex items-center gap-4">热爱旅游 <span class="text-xs font-normal text-gray-400 uppercase tracking-widest">Voyage</span></h3>
+                        <p class="text-base text-gray-600 leading-relaxed">
+                            对我而言，旅游不是打卡，而是“叙事采风”。每一个陌生的城市都是一本尚未翻开的剧本，我沉迷于收集不同地域的色彩纹理、方言声调和街道布局，这些都是日后构建关卡时的重要素材。 <span class="kaomoji">( ´ ▽ ` )ﾉ</span>
+                        </p>
+                    </div>
+                    <div class="quest-card">
+                        <h3 class="text-xl lg:text-2xl font-bold mb-4 text-[#e98b8b]">观察路人的小怪癖 <span class="text-xs font-normal text-gray-400 uppercase tracking-widest">People Watching</span></h3>
+                        <p class="text-base text-gray-600 leading-relaxed">
+                            看那个匆忙避雨的人整理领口的动作，看那对情侣告别时的眼神交汇。我会偷偷给他们编排身后的故事、隐秘的动机和未来的结局。“每一个路人，都是我文字宇宙里的一颗潜伏星辰”。 <span class="kaomoji">👁️‍🗨️</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="illustration-box bg-white border border-gray-100 shadow-xl order-1 lg:order-2 overflow-hidden">
+                    <span class="text-8xl">🔭</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Experience: 冒险实录 -->
+    <section id="experience" class="bg-white">
+        <div class="max-w-6xl mx-auto w-full px-4">
+            <h2 class="serif section-title">冒险实录 / Quest Log</h2>
+            <div class="mt-8">
+                <div class="quest-card flex flex-col lg:flex-row gap-12">
+                    <div class="lg:w-1/3">
+                        <div class="text-4xl mb-6">🎓</div>
+                        <h3 class="text-3xl font-bold mb-6">学术双塔 Spire</h3>
+                        <p class="text-base text-gray-400 leading-relaxed">
+                            我在 UIUC 与 OSU 完成了从“文学重塑”到“视觉叙事”的跨学科闭环。这段旅程不仅是学历的累积，更是对“如何讲好一个故事”底层逻辑的深度拆解。
+                        </p>
+                    </div>
+                    <div class="lg:w-2/3 space-y-6">
+                        <div class="p-6 lg:p-8 bg-gray-50 rounded-[32px] border-l-8 border-[#6b7c67] hover:bg-gray-100 transition-colors shadow-sm">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                                <h4 class="text-lg lg:text-xl font-bold">University of Illinois (UIUC)</h4>
+                                <span class="text-sm font-bold text-[#6b7c67] bg-[#6b7c67]/10 px-3 py-1 rounded-full">GPA 3.65</span>
+                            </div>
+                            <p class="text-xs lg:text-sm text-gray-600 font-bold mb-3 uppercase tracking-tighter">Creative Writing / 创意写作</p>
+                            <p class="text-sm text-gray-500 leading-relaxed">
+                                <b>文字的力量：</b> 深度钻研古典文学叙事结构，并在 HRI (Humanities Research Institute) 获得研究金。我在此期间发表过多篇实验性短篇小说，探索文字在非线性框架下的情感传达。这段经历让我学会了如何用精准的遣词造句去构建“角色的内心暗流”。
+                            </p>
+                        </div>
+                        <div class="p-6 lg:p-8 bg-gray-50 rounded-[32px] border-l-8 border-[#e98b8b] hover:bg-gray-100 transition-colors shadow-sm">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                                <h4 class="text-lg lg:text-xl font-bold">Ohio State University (OSU)</h4>
+                                <span class="text-sm font-bold text-[#e98b8b] bg-[#e98b8b]/10 px-3 py-1 rounded-full">GPA 3.5</span>
+                            </div>
+                            <p class="text-xs lg:text-sm text-gray-600 font-bold mb-3 uppercase tracking-tighter">Film Production / 电影制作</p>
+                            <p class="text-sm text-gray-500 leading-relaxed">
+                                <b>视听的转译：</b> 专注于实验电影与镜头语言。学会了如何不依赖对话，仅通过光影、场面调度和剪辑节奏来驱动叙事。极大提升了我对游戏过场动画及视听联觉的感知力。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Skills: 核心天赋 -->
+    <section id="skills" class="bg-[#fafaf8]">
+        <div class="max-w-5xl mx-auto w-full px-4 text-center">
+            <h2 class="serif section-title">核心天赋 / Core Talent</h2>
+            <div class="mt-12 flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
+                <span class="skill-tag">交互式脚本撰写</span>
+                <span class="skill-tag">电影视听语言应用</span>
+                <span class="skill-tag">角色小传与隐秘动机设计</span>
+                <span class="skill-tag">环境叙事 (Environmental Storytelling)</span>
+                <span class="skill-tag">碎片化叙事逻辑构建</span>
+                <span class="skill-tag">Adobe Premiere & 视音频剪辑</span>
+                <span class="skill-tag">跨文化文本翻译与本地化</span>
+                <span class="skill-tag">多线剧情分支设计</span>
+                <span class="skill-tag">游戏心理学与玩家情绪引导</span>
+            </div>
+            <div class="mt-16 p-8 lg:p-12 bg-white rounded-[40px] border border-gray-100 inline-block text-left max-w-3xl">
+                <div class="flex gap-4 items-start">
+                    <span class="text-2xl shrink-0">💡</span>
+                    <p class="text-gray-600 leading-loose italic text-sm lg:text-base">
+                        “技能只是工具，我真正擅长的是将冰冷的机制逻辑‘转译’成温暖的人文体验。无论是撰写万字的剧本大纲，还是设计一个简单的路牌说明，我都在追求那种让玩家‘瞬间击穿心防’的叙事密度。”
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Dual Soul: 双面玩家 -->
+    <section id="dual-soul" class="bg-[#111] text-white">
+        <div class="max-w-6xl mx-auto w-full px-4">
+            <div class="mb-16">
+                <h2 class="text-4xl lg:text-6xl serif mb-6 text-[#d4af37]">双面玩家 / Narrative Archive</h2>
+                <p class="text-lg lg:text-xl text-gray-400 max-w-3xl font-light leading-relaxed">
+                    我不只是游戏的游玩者，更是“叙事机制”的解构者。我痴迷于在极端的审美风格中寻找平衡。 <span class="kaomoji">†_(･ω･ )β</span>
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- 阳光板块 -->
+                <div class="game-panel bg-white/5 group">
+                    <div class="flex items-center gap-6 mb-8">
+                        <span class="text-4xl group-hover:scale-110 transition-transform">☀️</span>
+                        <h3 class="text-2xl font-bold text-[#6b7c67]">阳光与自由机制</h3>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="p-6 bg-white/5 rounded-[24px] hover:bg-white/10 transition-colors">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-bold">《荒野之息》</h4>
+                                <span class="glass-tag">环境叙事</span>
+                            </div>
+                            <p class="text-xs text-gray-400 leading-relaxed">
+                                研究其如何通过地貌驱动好奇心。拆解其“引力点”设计：无需显指引，仅凭远方的烟或怪树，就能引导玩家书写自发的冒险日记。
+                            </p>
+                        </div>
+                        <div class="p-6 bg-white/5 rounded-[24px] hover:bg-white/10 transition-colors">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-bold">《超级马里奥》</h4>
+                                <span class="glass-tag">乐趣心理学</span>
+                            </div>
+                            <p class="text-xs text-gray-400 leading-relaxed">
+                                研究任天堂的“体感叙事”。它如何将“挫败感”转化为“再来一次的期待”，通过极简反馈，将“勇气”内化为玩家习惯。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 诡谲板块 -->
+                <div class="game-panel bg-[#e98b8b]/5 border-[#e98b8b]/20 group">
+                    <div class="flex items-center gap-6 mb-8">
+                        <span class="text-4xl group-hover:scale-110 transition-transform">🌙</span>
+                        <h3 class="text-2xl font-bold text-[#e98b8b]">诡谲与深层隐喻</h3>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="p-6 bg-black/40 rounded-[24px] hover:bg-black/60 transition-colors border border-white/5">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-bold">《Rusty Lake》</h4>
+                                <span class="glass-tag text-[#e98b8b]">符号美学</span>
+                            </div>
+                            <p class="text-xs text-gray-300 leading-relaxed">
+                                分析其如何利用超现实符号构建家族轮回悲剧。这种碎片化、解谜式的文本呈现，让我理解了“不直接告知”的叙事美感。
+                            </p>
+                        </div>
+                        <div class="p-6 bg-black/40 rounded-[24px] hover:bg-black/60 transition-colors border border-white/5">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-bold">《Sally Face》</h4>
+                                <span class="glass-tag text-[#e98b8b]">创伤叙事</span>
+                            </div>
+                            <p class="text-xs text-gray-300 leading-relaxed">
+                                证明了独立游戏可以通过强烈的风格化实现与玩家深层灵魂的对话。这教会了我如何用“温柔”去包裹“残酷”。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-24 bg-white text-center border-t border-gray-100">
+        <div class="max-w-xl mx-auto px-6">
+            <h2 class="text-3xl lg:text-4xl serif mb-10 text-[#6b7c67]">雷昊玥 | Charlotte Lei</h2>
+            <div class="text-sm lg:text-base text-gray-500 font-light space-y-3 tracking-wider">
+                <p>Phone: 189-1677-5725</p>
+                <p>Email: charlotte_yue04@163.com</p>
+                <div class="inline-block px-6 py-3 bg-[#6b7c67]/5 rounded-full border border-[#6b7c67]/10 mt-6">
+                    <p class="text-[#6b7c67] font-bold">WeChat: OvO_Charlotte_Yue</p>
+                </div>
+            </div>
+            
+            <!-- 彩蛋提示 -->
+            <div class="mt-12 p-4 bg-gray-50 rounded-2xl inline-flex items-center gap-3">
+                <span class="text-lg">⌨️</span>
+                <p class="text-xs text-gray-400 font-medium">Tip: 试试在键盘上按下 <span class="px-2 py-0.5 bg-white border border-gray-200 rounded shadow-sm text-gray-600 font-bold">Z</span> 键，有惊喜出现哦！</p>
+            </div>
+
+            <div class="mt-16 text-[10px] uppercase tracking-[0.5em] text-gray-300">
+                © 2024 Charlotte Lei Portfolio.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 滚动进度条逻辑
+        window.onscroll = function() {
+            let scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            document.getElementById("progress-bar").style.width = scrolled + "%";
+        };
+
+        // 叶子光标逻辑（仅限宽屏）
+        const cursor = document.getElementById('leaf-cursor');
+        if (window.innerWidth >= 1024) {
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+        }
+
+        // 按键彩蛋：按 Z 呼唤 呀哈哈
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'z') {
+                const korok = document.createElement('div');
+                korok.className = 'korok-popup';
+                korok.innerHTML = `<span style="font-size: 40px">🍃</span><div class="bg-[#6b7c67] text-white text-[12px] px-4 py-2 rounded-full font-bold shadow-lg">Yahaha! 你找到我了!</div>`;
+                korok.style.left = (Math.random() * 80 + 10) + 'vw';
+                korok.style.top = (Math.random() * 80 + 10) + 'vh';
+                document.body.appendChild(korok);
+                setTimeout(() => korok.remove(), 1200);
+            }
+        });
+    </script>
+</body>
+</html>
